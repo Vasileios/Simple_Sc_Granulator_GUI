@@ -1,0 +1,188 @@
+/*
+
+VA Feb 28 2013
+Simple GUI Granulator example in SuperCollider
+
+*/
+
+
+
+(
+
+s.waitForBoot({
+
+var w, b, p, source, startButton, update;
+var freqslider, cutoffslider, rqslider, modfreqslider, indslider, freqblowslider;
+var  bufferslider, triggerslider, durslider, rateslider;
+var posslider, volslider, panslider, winenv;
+var button1, button2, button3, button4, button5, button6, buttonR, buttonB;
+var cmdPeriodFunc, node;
+
+
+				~sample2 = Buffer.read(s, Platform.resourceDir +/+ "sounds/a11wlk01-44_1.aiff"); // prefer mono sounds
+
+SynthDef(\granulatorA, {| gate = 1, freq = 1, freq2 = 1000,  freqblow = 1, rq = 0.25, modfreq = 1, ind = 0.1, amp = 0.001, bufnum, envbuf = -1, trig = 1, dur = 0.01, rate = 0.1, pos = 0.1, pan = 0, vol = 0.001|
+        var env, modulator, source;
+
+		modulator= SinOsc.kr(modfreq,0,10*modfreq*ind, freq);
+
+		env = EnvGen.kr(
+                Env.cutoff,
+                gate,
+                doneAction: 2);
+
+        source = GrainBuf.ar(2, Impulse.kr(trig), dur, bufnum, BufRateScale.kr(bufnum)*(modulator/440)*rate, pos, 2, pan, envbuf)*env;
+
+
+		source = LPF.ar(source, freq2);
+		
+                 Out.ar(0, source*vol)!2
+        }).send(s);
+			
+	////// -  GUI - //////
+		
+		w = Window("BAGranulatorA", Rect(0, 3000, 440, 260));
+w.view.decorator = FlowLayout(w.view.bounds);
+w.view.decorator.gap = 2@2;
+w.front;
+w.view.background = Color.black;
+	
+// GUI_Buttons 
+
+startButton = Button(w, 75 @ 20);
+startButton.states = [
+        ["Start", Color.black, Color.green(0.7)],
+        ["Stop", Color.white, Color.red(1.0)]
+];
+startButton.action = {|view|
+                if (view.value == 1) {
+                        // start sound
+                        node = Synth( "granulatorA", [
+
+											
+											 "bufnum", ~sample2.value,
+											 "bufnum".size,
+											 "freq", freqslider.value,
+											 "freq2", cutoffslider.value,
+											 "modfreq", modfreqslider.value,
+											 "ind", indslider.value,
+											 "trig", triggerslider.value,
+                                					 "dur", durslider.value,
+                             				      "rate", rateslider.value,
+											 "pos", posslider.value,
+											 "pan", panslider.value, 
+											 "vol", panslider.value.dbamp ]);
+                } {
+                        // set gate to zero to cause envelope to release
+                        node.release; node = nil;
+					
+                };
+};
+///////////////////////////////////////////////////////////////
+// Record
+buttonR = Button(w, 45 @ 20);
+buttonR.states = [
+	["Rec", Color.black, Color.red(0.7)],
+	["o", Color.black, Color.red(1.0)]
+];
+buttonR.action = ({|v|
+		 	if(v.value == 1) {
+		 	                 
+ AppClock.sched(0, {fork{s.prepareForRecord; s.sync; 0.5.wait; s.record}}) 
+                                
+}{
+	s.stopRecording.postln;
+	
+}
+});
+///////////////////////////////////////////////////////////////////	
+// GUI_Sliders
+
+freqslider = EZSlider(w, 430@20, "freq", 
+ControlSpec(60, 10000, 'exponential', 1, 100, \Hz), {|ez|
+	node.set(\freq, ez.value)}, unitWidth:30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//freqslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+//////////////////////////////////////////////////////	
+modfreqslider = EZSlider(w, 430@20, "modfreq", 
+ControlSpec(1, 4400, 'exponential', 1, 1, \Hz), {|ez|
+	node.set(\modfreq, ez.value)}, unitWidth: 30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//modfreqslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+//////////////////////////////////////////////////////
+indslider = EZSlider(w, 430@20, "ind", 
+ControlSpec(0.0, 40, 'lin', 0.1, 0.1), {|ez|
+	node.set(\ind, ez.value)}, unitWidth: 30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white,Color.red);
+	//indslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+//////////////////////////////////////////////////////
+triggerslider = EZSlider(w, 430@20, "trigger", 
+ControlSpec(1, 80, 'lin', 1, 5, \den), {|ez|
+	node.set(\trig, ez.value)}, unitWidth: 30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//triggerslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+/////////////////////////////////////////////////////
+durslider = EZSlider(w, 430@20, "duration", 
+ControlSpec(0.001, 5, 'lin', 0.001, 0.05, \sec), {|ez|
+	node.set(\dur, ez.value)}, unitWidth: 30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//durslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+/////////////////////////////////////////////////////
+rateslider = EZSlider(w, 430@20, "rate", 
+ControlSpec(-8, 4, 'lin', 1, -2, \sp), {|ez|
+	node.set(\rate, ez.value)}, unitWidth: 30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//rateslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+////////////////////////////////////////////////////
+posslider = EZSlider(w, 430@20, "possition", 
+ControlSpec(0.01, 1, 'lin', 0.01, 0.2, \pos), {|ez|
+	node.set(\pos, ez.value)}, unitWidth: 30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//posslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+////////////////////////////////////////////////////	
+cutoffslider = EZSlider(w, 430@20, "cutoff", 
+ControlSpec(1000, 5000, 'exponential', 1, 2000, \Hz), {|ez|
+	node.set(\freq2, ez.value)}, unitWidth:30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//freqslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+////////////////////////////////////////////////////	
+panslider = EZSlider(w, 430@20, "panpot", 
+ControlSpec(-1, 1, 'lin', 0.1, 0, \crd), {|ez|
+	node.set(\pan, ez.value)}, unitWidth: 30)
+	.setColors(Color.grey,Color.white, Color.grey(0.7),Color.grey, Color.white, Color.red);
+	//panslider.font_(Font("Helvetica",11));
+	w.view.decorator.nextLine;
+ //////////////////////////////////////////////////// 
+	volslider = EZSlider(w, 430@20, "amp",
+ ControlSpec(0.001, 1.0, 'lin', 0.01, 0.5, \db), {|ez|
+	node.set(\vol, ez.value)}, unitWidth: 30)
+	.setColors(Color.red, Color.white, Color.grey);
+	//volslider.font_(Font("Helvetica",11));
+//////////////////////////////////////////////////////
+	// set start button to zero upon a cmd-period
+cmdPeriodFunc = { startButton.value = 0; };
+CmdPeriod.add(cmdPeriodFunc);
+//////////////////////////////////////////////////////
+// stop the sound when window closes and remove cmdPeriodFunc.
+w.onClose = {
+        node.free; node = nil;
+		~sample2.free;
+			"Buffer is free".postln;
+		b.free; b = nil;
+        CmdPeriod.remove(cmdPeriodFunc);
+
+};
+});
+)
+
+
+
+
