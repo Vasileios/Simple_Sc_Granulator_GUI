@@ -19,10 +19,11 @@ var button1, button2, button3, button4, button5, button6, buttonR, buttonB;
 var cmdPeriodFunc, node;
 
 
-				~sample2 = Buffer.read(s, Platform.resourceDir +/+ "sounds/a11wlk01-44_1.aiff"); // prefer mono sounds
+~sample2 = Buffer.read(s, Platform.resourceDir +/+ "sounds/a11wlk01-44_1.aiff"); // prefer mono sounds
 
-SynthDef(\granulatorA, {| gate = 1, freq = 1, freq2 = 1000,  freqblow = 1, rq = 0.25, modfreq = 1, ind = 0.1, amp = 0.001, bufnum, envbuf = -1, trig = 1, dur = 0.01, rate = 0.1, pos = 0.1, pan = 0, vol = 0.001|
-        var env, modulator, source;
+SynthDef(\granulatorA, {| gate = 1, freq = 1, freq2 = 1000,  freqblow = 1, rq = 0.25, modfreq = 1,
+ind = 0.1, amp = 0.001, bufnum, envbuf = -1, trig = 1, dur = 0.01, rate = 0.1, pos = 0.1, pan = 0, vol = 0.001|
+var env, modulator, source;
 
 		modulator= SinOsc.kr(modfreq,0,10*modfreq*ind, freq);
 
@@ -31,17 +32,16 @@ SynthDef(\granulatorA, {| gate = 1, freq = 1, freq2 = 1000,  freqblow = 1, rq = 
                 gate,
                 doneAction: 2);
 
-        source = GrainBuf.ar(2, Impulse.kr(trig), dur, bufnum, BufRateScale.kr(bufnum)*(modulator/440)*rate, pos, 2, pan, envbuf)*env;
+source = GrainBuf.ar(2, Impulse.kr(trig), dur, bufnum, BufRateScale.kr(bufnum)*(modulator/440)*rate, pos, 2, pan, envbuf)*env;
 
-
-		source = LPF.ar(source, freq2);
+source = LPF.ar(source, freq2);
 		
                  Out.ar(0, source*vol)!2
         }).send(s);
 			
 	////// -  GUI - //////
 		
-		w = Window("BAGranulatorA", Rect(0, 3000, 440, 260));
+w = Window("BAGranulatorA", Rect(0, 3000, 440, 260));
 w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap = 2@2;
 w.front;
@@ -67,8 +67,8 @@ startButton.action = {|view|
 											 "modfreq", modfreqslider.value,
 											 "ind", indslider.value,
 											 "trig", triggerslider.value,
-                                					 "dur", durslider.value,
-                             				      "rate", rateslider.value,
+                                					                 "dur", durslider.value,
+                             				                                 "rate", rateslider.value,
 											 "pos", posslider.value,
 											 "pan", panslider.value, 
 											 "vol", panslider.value.dbamp ]);
