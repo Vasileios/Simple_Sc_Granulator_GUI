@@ -95,8 +95,8 @@ startButton.action = {|view|
 											 "modfreq", modfreqslider.value,
 											 "ind", indslider.value,
 											 "trig", triggerslider.value,
-                                			 "dur", durslider.value,
-                             				 "rate", rateslider.value,
+                                			                                 "dur", durslider.value,
+                             				                                 "rate", rateslider.value,
 											 "pos", posslider.value,
 											 "pan", panslider.value, 
 											 "vol", panslider.value.dbamp ]);
